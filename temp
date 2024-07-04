@@ -1,0 +1,79 @@
+const puppeteer = require('puppeteer');
+
+async function fillForm(email, password) {
+    const browser = await puppeteer.launch({
+        headless: false,
+        executablePath: 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe'
+    });
+    const page = await browser.newPage();
+
+    const formUrl = 'https://forms.office.com/pages/responsepage.aspx?id=QKRT3Wr9XkC75lKx5h6C250K0he2INlMpVo-aPzZEeJUQlI4S1VTOFRRTDk1QUtONjI2NlYwQzVMNi4u';
+
+    // Navigate to the form URL
+    await page.goto(formUrl, { waitUntil: 'networkidle2' });
+
+    // Log in to Microsoft account
+    await page.type('input[type="email"]', email);
+    await page.click('input[type="submit"]');
+    await page.waitForNavigation();
+
+    await page.type('input[type="password"]', password);
+    await page.click('input[type="submit"]');
+    await page.waitForNavigation();
+
+    const buttons = await page.$$('button');
+        if (buttons.length >= 6) {
+            await buttons[5].click();
+            console.log('Clicked the sixth button.');
+        } else {
+            console.log('Error: Less than 7 buttons found on the page.');
+        }
+
+    // Wait for the form to load
+    await page.waitForSelector('input[type="radio"]');
+
+    // Select the radio buttons with the given values
+    const radioValues = ["Student", "Y9", "Green Party", "Yes"];
+    for (const value of radioValues) {
+        if (value != 'ld') {
+            await page.click(`input[type="radio"][value="${value}"]`);
+            await delay(10); // Wait for 10ms before the next iteration
+        } else {
+            selectLiberalDemocratRadio(page)
+        }
+        
+    }
+
+    async function clickSeventhButton(page) {
+        // Find all buttons on the page
+        const buttons = await page.$$('button');
+    
+        // Check if there are at least 7 buttons
+        if (buttons.length >= 7) {
+            // Click the 7th button (index 6 in zero-based index)
+            await buttons[6].click();
+            console.log('Clicked the 7th button.');
+        } else {
+            console.error('There are less than 7 buttons on the page.');
+        }
+    }
+
+    function delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    // Submit the form (adjust the selector if necessary)
+    clickSeventhButton(page)
+
+    // Wait for the submission to complete
+    await page.waitForNavigation();
+
+    // Close the browser
+    await browser.close();
+}
+
+// Example usage:
+const email = 'test@dominicbournehotmail.onmicrosoft.com';
+const password = 'Mine12377';
+
+fillForm(email, password).catch(console.error);
